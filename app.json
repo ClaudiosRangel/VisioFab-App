@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "VisioFab",
+    "slug": "visiofab",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#14477E"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#14477E"
+      },
+      "package": "com.prosoft.visiofab"
+    },
+    "ios": {
+      "bundleIdentifier": "com.prosoft.visiofab",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "plugins": [
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a6d001b9-184c-4df5-bd88-33b3c41b35d6"
+      }
+    }
+  }
+}
