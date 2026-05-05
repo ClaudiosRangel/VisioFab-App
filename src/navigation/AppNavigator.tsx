@@ -1,126 +1,57 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useAuth } from '../context/AuthContext';
-import LoginScreen from '../screens/LoginScreen';
-import ListaOSScreen from '../screens/ListaOSScreen';
-import DetalheOSScreen from '../screens/DetalheOSScreen';
-import ContagemScreen from '../screens/ContagemScreen';
-import HistoricoScreen from '../screens/HistoricoScreen';
-import LoadingOverlay from '../components/LoadingOverlay';
+import React from 'react'
+import { NavigationContainer } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { useAuth } from '../context/AuthContext'
+import LoadingOverlay from '../components/LoadingOverlay'
+import LoginScreen from '../screens/LoginScreen'
+import HomeScreen from '../screens/HomeScreen'
+import SettingsScreen from '../screens/SettingsScreen'
+import ListaOSPendentesScreen from '../screens/ListaOSPendentesScreen'
+import ConferenciaEntradaScreen from '../screens/ConferenciaEntradaScreen'
+import EnderecamentoScreen from '../screens/EnderecamentoScreen'
+import SeparacaoScreen from '../screens/SeparacaoScreen'
+import EmbalagemScreen from '../screens/EmbalagemScreen'
+import CarregamentoScreen from '../screens/CarregamentoScreen'
+import ConferenciaSaidaScreen from '../screens/ConferenciaSaidaScreen'
+import InventarioScreen from '../screens/InventarioScreen'
+import type { RootStackParamList, MainStackParamList } from '../types/wms'
 
-export type RootStackParamList = {
-  Login: undefined;
-  Main: undefined;
-  NaoAutorizado: undefined;
-};
+const RootStack = createNativeStackNavigator<RootStackParamList>()
+const MainStack = createNativeStackNavigator<MainStackParamList>()
 
-export type BottomTabParamList = {
-  OrdensServicoTab: undefined;
-  HistoricoTab: undefined;
-};
-
-export type OSStackParamList = {
-  ListaOS: undefined;
-  DetalheOS: { osId: string };
-  Contagem: { osId: string; etapaIndex: number; maquinaNome: string };
-};
-
-export type HistoricoStackParamList = {
-  Historico: undefined;
-};
-
-function NaoAutorizadoScreen() {
+function MainNavigator() {
   return (
-    <View style={s.center}>
-      <Text style={{ fontSize: 48, marginBottom: 16 }}>{'🔒'}</Text>
-      <Text style={s.title}>Acesso não autorizado</Text>
-      <Text style={s.sub}>Você não possui permissão para acessar esta funcionalidade.</Text>
-    </View>
-  );
+    <MainStack.Navigator screenOptions={{ headerShown: false }}>
+      <MainStack.Screen name="Home" component={HomeScreen} />
+      <MainStack.Screen name="Settings" component={SettingsScreen} />
+      <MainStack.Screen name="ListaOSPendentes" component={ListaOSPendentesScreen} />
+      <MainStack.Screen name="ConferenciaEntrada" component={ConferenciaEntradaScreen} />
+      <MainStack.Screen name="Enderecamento" component={EnderecamentoScreen} />
+      <MainStack.Screen name="Separacao" component={SeparacaoScreen} />
+      <MainStack.Screen name="Embalagem" component={EmbalagemScreen} />
+      <MainStack.Screen name="Carregamento" component={CarregamentoScreen} />
+      <MainStack.Screen name="ConferenciaSaida" component={ConferenciaSaidaScreen} />
+      <MainStack.Screen name="Inventario" component={InventarioScreen} />
+    </MainStack.Navigator>
+  )
 }
 
-const OSStack = createNativeStackNavigator<OSStackParamList>();
-function OSStackNavigator() {
-  return (
-    <OSStack.Navigator screenOptions={{ headerShown: false }}>
-      <OSStack.Screen name="ListaOS" component={ListaOSScreen} />
-      <OSStack.Screen name="DetalheOS" component={DetalheOSScreen} />
-      <OSStack.Screen name="Contagem" component={ContagemScreen} />
-    </OSStack.Navigator>
-  );
-}
-
-const HistStack = createNativeStackNavigator<HistoricoStackParamList>();
-function HistoricoStackNavigator() {
-  return (
-    <HistStack.Navigator screenOptions={{ headerShown: false }}>
-      <HistStack.Screen name="Historico" component={HistoricoScreen} />
-    </HistStack.Navigator>
-  );
-}
-
-const Tab = createBottomTabNavigator<BottomTabParamList>();
-function BottomTabs() {
-  const { usuario } = useAuth();
-  const mostrarHistorico = usuario?.permissoes?.app_historico === true;
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#14477E',
-        tabBarInactiveTintColor: 'rgba(47,43,61,0.4)',
-        tabBarStyle: { backgroundColor: '#FFF', borderTopColor: 'rgba(47,43,61,0.12)' },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-      }}
-    >
-      <Tab.Screen
-        name="OrdensServicoTab"
-        component={OSStackNavigator}
-        options={{
-          tabBarLabel: 'Ordens de Serviço',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>{'📋'}</Text>,
-        }}
-      />
-      {mostrarHistorico && (
-        <Tab.Screen
-          name="HistoricoTab"
-          component={HistoricoStackNavigator}
-          options={{
-            tabBarLabel: 'Histórico',
-            tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>{'🕐'}</Text>,
-          }}
-        />
-      )}
-    </Tab.Navigator>
-  );
-}
-
-const Root = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
-  const { usuario, carregando } = useAuth();
-  if (carregando) return <LoadingOverlay visible message="Carregando..." />;
-  const autenticado = !!usuario;
-  const temPermissao = usuario?.permissoes?.app_contagem === true;
+  const { usuario, carregando } = useAuth()
+
+  if (carregando) return <LoadingOverlay visible message="Carregando..." />
+
+  const autenticado = !!usuario
+
   return (
     <NavigationContainer>
-      <Root.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {!autenticado ? (
-          <Root.Screen name="Login" component={LoginScreen} />
-        ) : temPermissao ? (
-          <Root.Screen name="Main" component={BottomTabs} />
+          <RootStack.Screen name="Login" component={LoginScreen} />
         ) : (
-          <Root.Screen name="NaoAutorizado" component={NaoAutorizadoScreen} />
+          <RootStack.Screen name="Main" component={MainNavigator} />
         )}
-      </Root.Navigator>
+      </RootStack.Navigator>
     </NavigationContainer>
-  );
+  )
 }
-
-const s = StyleSheet.create({
-  center: { flex: 1, backgroundColor: '#F8F7FA', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  title: { fontSize: 20, fontWeight: '700', color: 'rgba(47,43,61,0.9)', marginBottom: 8 },
-  sub: { fontSize: 14, color: 'rgba(47,43,61,0.7)', textAlign: 'center', lineHeight: 22 },
-});

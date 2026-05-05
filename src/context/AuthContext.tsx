@@ -1,74 +1,59 @@
-﻿import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
-import type { Usuario } from '../types';
+﻿import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { apiClient, TOKEN_KEY } from '../services/apiClient'
+import type { AuthUser, LoginResponse } from '../types/wms'
 
 interface AuthContextData {
-  usuario: Usuario | null;
-  carregando: boolean;
-  login: (email: string, senha: string) => Promise<void>;
-  logout: () => Promise<void>;
+  usuario: AuthUser | null
+  carregando: boolean
+  login: (email: string, senha: string) => Promise<void>
+  logout: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const pronto = useRef(false);
+  const [usuario, setUsuario] = useState<AuthUser | null>(null)
+  const [carregando, setCarregando] = useState(true)
 
-  async function buscarUsuario(uid: string): Promise<Usuario | null> {
-    const snap = await getDoc(doc(db, 'usuarios', uid));
-    if (!snap.exists()) return null;
-    return { id: snap.id, ...snap.data() } as Usuario;
-  }
-
+  // On mount, check for existing token
   useEffect(() => {
-    // Força logout ao abrir o app (segurança)
-    signOut(auth).catch(() => {}).finally(() => {
-      pronto.current = true;
-      setCarregando(false);
-    });
-
-    const unsub = onAuthStateChanged(auth, async (fbUser) => {
-      if (!pronto.current) return;
-      if (!fbUser) { setUsuario(null); setCarregando(false); return; }
-
+    ;(async () => {
       try {
-        const usr = await buscarUsuario(fbUser.uid);
-        if (!usr || !usr.ativo) { await signOut(auth); setUsuario(null); }
-        else setUsuario(usr);
+        const token = await AsyncStorage.getItem(TOKEN_KEY)
+        if (token) {
+          // Validate token by fetching user info
+          const { data } = await apiClient.get('/auth/me')
+          setUsuario(data.usuario || data)
+        }
       } catch {
-        await signOut(auth);
-        setUsuario(null);
+        // Token invalid or expired
+        await AsyncStorage.removeItem(TOKEN_KEY)
+        setUsuario(null)
+      } finally {
+        setCarregando(false)
       }
-      setCarregando(false);
-    });
-
-    return () => unsub();
-  }, []);
+    })()
+  }, [])
 
   const login = useCallback(async (email: string, senha: string) => {
-    const cred = await signInWithEmailAndPassword(auth, email, senha);
-    const usr = await buscarUsuario(cred.user.uid);
-    if (!usr) { await signOut(auth); throw new Error('Acesso negado. Usuário não cadastrado no sistema'); }
-    if (!usr.ativo) { await signOut(auth); throw new Error('Acesso negado. Usuário inativo'); }
-    setUsuario(usr);
-  }, []);
+    const { data } = await apiClient.post<LoginResponse>('/auth/login', { email, senha })
+    await AsyncStorage.setItem(TOKEN_KEY, data.token)
+    setUsuario(data.usuario)
+  }, [])
 
   const logout = useCallback(async () => {
-    await signOut(auth);
-    setUsuario(null);
-  }, []);
+    await AsyncStorage.removeItem(TOKEN_KEY)
+    setUsuario(null)
+  }, [])
 
   return (
     <AuthContext.Provider value={{ usuario, carregando, login, logout }}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
-export function useAuth(): AuthContextData {
-  return useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext)
 }
