@@ -172,6 +172,13 @@ export default function EnderecamentoScreen() {
               <Text style={s.infoLabel}>Endereço selecionado:</Text>
               <Text style={s.infoValue}>{endereco?.enderecoCompleto}</Text>
             </View>
+            {totalEnderecados > 0 && (
+              <TouchableOpacity style={s.btnConcluir} onPress={() => {
+                Alert.alert('Endereçamento Concluído', `${totalEnderecados} item(ns) endereçado(s) com sucesso.`, [{ text: 'OK', onPress: () => nav.goBack() }])
+              }}>
+                <Text style={s.btnConcluirText}>✅ Concluir Endereçamento</Text>
+              </TouchableOpacity>
+            )}
             <Text style={s.instruction}>Escanear código de barras do produto</Text>
             <BarcodeScanner onScan={handleScanProduct} placeholder="Escanear produto..." />
           </View>
@@ -232,4 +239,6 @@ const s = StyleSheet.create({
   btnConfirmText: { color: '#fff', fontWeight: '600' },
   resetBtn: { alignItems: 'center', padding: 12, marginTop: 16, marginBottom: 32 },
   resetText: { color: '#14477E', fontSize: 14, fontWeight: '600' },
+  btnConcluir: { backgroundColor: '#28C76F', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
+  btnConcluirText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 })
