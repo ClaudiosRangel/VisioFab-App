@@ -39,7 +39,7 @@ export default function EnderecamentoScreen() {
     setLoading(true)
     try {
       const { data } = await apiClient.post<ValidarLocalizacaoResponse>(
-        '/enderecamento-wms/validar-localizacao',
+        '/enderecamento-wms/buscar-endereco-barcode',
         { barcode: code, notaEntradaId: params.notaEntradaId },
       )
       if (data.valido && data.endereco) {
@@ -63,7 +63,7 @@ export default function EnderecamentoScreen() {
     setLoading(true)
     try {
       const { data } = await apiClient.post<ValidarProdutoResponse>(
-        '/enderecamento-wms/validar-produto',
+        '/enderecamento-wms/buscar-produto-barcode',
         { barcode: code, notaEntradaId: params.notaEntradaId },
       )
       if (data.valido && data.produtoEsperado) {
