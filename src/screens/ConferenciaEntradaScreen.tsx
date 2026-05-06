@@ -66,7 +66,8 @@ export default function ConferenciaEntradaScreen() {
         { codigoProduto: scannedCode, quantidade },
       )
       setResultado(data)
-      setConferidos((prev) => prev + 1)
+      const newConferidos = conferidos + 1
+      setConferidos(newConferidos)
 
       if (data.status === 'CONFORME') {
         showFeedback('success')
@@ -77,6 +78,27 @@ export default function ConferenciaEntradaScreen() {
       setScannedCode(null)
     } catch (e: any) {
       const msg = e?.response?.data?.message || 'Erro ao conferir item'
+      Alert.alert('Erro', msg)
+      showFeedback('error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleFinalizar() {
+    setSubmitting(true)
+    try {
+      await apiClient.post(`/conferencia-entrada/confirmar/${params.notaId}`, {
+        acaoDivergencia: 'APROVAR',
+      })
+      showFeedback('success')
+      Alert.alert(
+        'Conferência Finalizada',
+        'Conferência aprovada com sucesso. OS de endereçamento criada.',
+        [{ text: 'OK', onPress: () => nav.goBack() }],
+      )
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || 'Erro ao finalizar conferência'
       Alert.alert('Erro', msg)
       showFeedback('error')
     } finally {
@@ -132,6 +154,16 @@ export default function ConferenciaEntradaScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        ) : conferidos >= itens.length && itens.length > 0 ? (
+          <View style={s.finalizarSection}>
+            <Text style={s.finalizarTitle}>✅ Todos os itens foram conferidos!</Text>
+            <TouchableOpacity style={s.btnFinalizar} onPress={handleFinalizar} disabled={submitting}>
+              <Text style={s.btnFinalizarText}>{submitting ? 'Finalizando...' : 'Finalizar Conferência'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.btnScanMore} onPress={() => setScannedCode(null)}>
+              <Text style={s.btnScanMoreText}>Conferir mais itens</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <BarcodeScanner onScan={handleScan} placeholder="Escanear produto..." />
         )}
@@ -181,4 +213,10 @@ const s = StyleSheet.create({
   itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 12, marginBottom: 6, elevation: 1 },
   itemDesc: { fontSize: 14, fontWeight: '600', color: '#333' },
   itemInfo: { fontSize: 12, color: '#888', marginTop: 2 },
+  finalizarSection: { backgroundColor: '#E8F8EF', borderRadius: 10, padding: 20, marginBottom: 12, alignItems: 'center' as const },
+  finalizarTitle: { fontSize: 16, fontWeight: '700', color: '#28C76F', marginBottom: 16, textAlign: 'center' as const },
+  btnFinalizar: { backgroundColor: '#28C76F', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 8, width: '100%' as any, alignItems: 'center' as const, marginBottom: 10 },
+  btnFinalizarText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnScanMore: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', width: '100%' as any, alignItems: 'center' as const },
+  btnScanMoreText: { color: '#666', fontSize: 14, fontWeight: '600' },
 })
