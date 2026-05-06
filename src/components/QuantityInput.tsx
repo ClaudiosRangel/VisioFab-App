@@ -10,8 +10,8 @@ interface Props {
 }
 
 export default function QuantityInput({ value, onChange, label, min = 0, max }: Props) {
-  const dec = () => onChange(Math.max(min, value - 1))
-  const inc = () => onChange(max !== undefined ? Math.min(max, value + 1) : value + 1)
+  const dec = () => onChange(Math.max(min, Math.round((value - 1) * 100) / 100))
+  const inc = () => onChange(max !== undefined ? Math.min(max, Math.round((value + 1) * 100) / 100) : Math.round((value + 1) * 100) / 100)
 
   return (
     <View style={s.container}>
@@ -20,10 +20,13 @@ export default function QuantityInput({ value, onChange, label, min = 0, max }: 
         <TouchableOpacity style={s.btn} onPress={dec}><Text style={s.btnText}>−</Text></TouchableOpacity>
         <TextInput
           style={s.input}
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
           value={String(value)}
           onChangeText={(t) => {
-            const n = parseInt(t, 10)
+            // Allow decimal input (comma or dot)
+            const cleaned = t.replace(',', '.')
+            if (cleaned === '' || cleaned === '.') return
+            const n = parseFloat(cleaned)
             if (!isNaN(n)) onChange(Math.max(min, max !== undefined ? Math.min(max, n) : n))
           }}
         />

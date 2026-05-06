@@ -122,7 +122,7 @@ export default function EnderecamentoScreen() {
         onBack={() => nav.goBack()}
       />
       <ScrollView style={s.content} keyboardShouldPersistTaps="handled">
-        <ProgressBar current={totalEnderecados} total={totalEnderecados + 1} label="Itens endereçados" />
+        <ProgressBar current={totalEnderecados} total={totalEnderecados || 1} label="Itens endereçados" />
 
         {/* Step indicators */}
         <View style={s.steps}>
