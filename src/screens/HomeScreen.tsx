@@ -101,6 +101,13 @@ export default function HomeScreen() {
         <Text style={s.osAction}>Toque para ver →</Text>
       </TouchableOpacity>
 
+      {/* Histórico */}
+      <TouchableOpacity style={s.historicoBtn} onPress={() => nav.navigate('HistoricoOS')}>
+        <Text style={s.historicoBtnIcon}>📜</Text>
+        <Text style={s.historicoBtnText}>Meu Histórico de OS</Text>
+        <Text style={s.historicoBtnArrow}>→</Text>
+      </TouchableOpacity>
+
       {/* Minhas OS em Andamento */}
       {minhasOS.length > 0 && (
         <>
@@ -162,4 +169,8 @@ const s = StyleSheet.create({
   minhaOsBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   minhaOsNf: { fontSize: 13, color: '#555', marginTop: 2 },
   minhaOsStatus: { fontSize: 12, color: '#14477E', marginTop: 4 },
+  historicoBtn: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, backgroundColor: '#fff', borderRadius: 10, padding: 14, elevation: 1 },
+  historicoBtnIcon: { fontSize: 22, marginRight: 12 },
+  historicoBtnText: { flex: 1, fontSize: 14, fontWeight: '600', color: '#333' },
+  historicoBtnArrow: { fontSize: 16, color: '#999' },
 })

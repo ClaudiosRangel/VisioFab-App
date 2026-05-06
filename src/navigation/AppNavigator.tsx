@@ -7,6 +7,7 @@ import LoginScreen from '../screens/LoginScreen'
 import HomeScreen from '../screens/HomeScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 import ListaOSPendentesScreen from '../screens/ListaOSPendentesScreen'
+import HistoricoOSScreen from '../screens/HistoricoOSScreen'
 import ConferenciaEntradaScreen from '../screens/ConferenciaEntradaScreen'
 import EnderecamentoScreen from '../screens/EnderecamentoScreen'
 import SeparacaoScreen from '../screens/SeparacaoScreen'
@@ -25,6 +26,7 @@ function MainNavigator() {
       <MainStack.Screen name="Home" component={HomeScreen} />
       <MainStack.Screen name="Settings" component={SettingsScreen} />
       <MainStack.Screen name="ListaOSPendentes" component={ListaOSPendentesScreen} />
+      <MainStack.Screen name="HistoricoOS" component={HistoricoOSScreen} />
       <MainStack.Screen name="ConferenciaEntrada" component={ConferenciaEntradaScreen} />
       <MainStack.Screen name="Enderecamento" component={EnderecamentoScreen} />
       <MainStack.Screen name="Separacao" component={SeparacaoScreen} />

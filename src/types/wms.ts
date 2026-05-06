@@ -201,6 +201,7 @@ export type MainStackParamList = {
   Home: undefined
   Settings: undefined
   ListaOSPendentes: undefined
+  HistoricoOS: undefined
   ConferenciaEntrada: { notaId: string; osId?: string }
   Enderecamento: { notaEntradaId: string; osId?: string }
   Separacao: { ondaSeparacaoId: string; osId?: string }
