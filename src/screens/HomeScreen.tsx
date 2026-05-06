@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl, FlatList } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useAuth } from '../context/AuthContext'
 import { apiClient } from '../services/apiClient'
-import type { MainStackParamList } from '../types/wms'
+import type { MainStackParamList, OrdemServicoWms } from '../types/wms'
 
 type Nav = NativeStackNavigationProp<MainStackParamList>
 
@@ -18,10 +18,20 @@ const OPERATIONS = [
   { key: 'inventario', label: 'Inventário', icon: '📊', color: '#636363', screen: 'ListaOSPendentes' },
 ] as const
 
+const OP_LABELS: Record<string, string> = {
+  CONFERENCIA: 'Conferência', ENDERECAMENTO: 'Endereçamento', SEPARACAO: 'Separação',
+  EMBALAGEM: 'Embalagem', CARREGAMENTO: 'Carregamento',
+}
+const OP_COLORS: Record<string, string> = {
+  CONFERENCIA: '#14477E', ENDERECAMENTO: '#28C76F', SEPARACAO: '#FF9F43',
+  EMBALAGEM: '#7367F0', CARREGAMENTO: '#00CFE8',
+}
+
 export default function HomeScreen() {
   const nav = useNavigation<Nav>()
   const { usuario, logout } = useAuth()
   const [osPendentes, setOsPendentes] = useState(0)
+  const [minhasOS, setMinhasOS] = useState<OrdemServicoWms[]>([])
   const [refreshing, setRefreshing] = useState(false)
 
   async function fetchPendentes() {
@@ -31,12 +41,39 @@ export default function HomeScreen() {
     } catch { /* ignore */ }
   }
 
-  useEffect(() => { fetchPendentes() }, [])
+  async function fetchMinhasOS() {
+    try {
+      const { data } = await apiClient.get('/os-wms/minhas')
+      setMinhasOS(data.data || [])
+    } catch { /* ignore */ }
+  }
+
+  useEffect(() => { fetchPendentes(); fetchMinhasOS() }, [])
 
   async function onRefresh() {
     setRefreshing(true)
-    await fetchPendentes()
+    await Promise.all([fetchPendentes(), fetchMinhasOS()])
     setRefreshing(false)
+  }
+
+  function navigateToOperation(os: OrdemServicoWms) {
+    switch (os.operacao) {
+      case 'CONFERENCIA':
+        if (os.notaEntradaId) nav.navigate('ConferenciaEntrada', { notaId: os.notaEntradaId, osId: os.id })
+        break
+      case 'ENDERECAMENTO':
+        if (os.notaEntradaId) nav.navigate('Enderecamento', { notaEntradaId: os.notaEntradaId, osId: os.id })
+        break
+      case 'SEPARACAO':
+        if (os.ondaSeparacaoId) nav.navigate('Separacao', { ondaSeparacaoId: os.ondaSeparacaoId, osId: os.id })
+        break
+      case 'EMBALAGEM':
+        if (os.ondaSeparacaoId) nav.navigate('Embalagem', { volumeId: '', ondaSeparacaoId: os.ondaSeparacaoId, osId: os.id })
+        break
+      case 'CARREGAMENTO':
+        if (os.carregamentoId) nav.navigate('Carregamento', { carregamentoId: os.carregamentoId, osId: os.id })
+        break
+    }
   }
 
   return (
@@ -63,6 +100,29 @@ export default function HomeScreen() {
         <Text style={s.osLabel}>OS Pendentes</Text>
         <Text style={s.osAction}>Toque para ver →</Text>
       </TouchableOpacity>
+
+      {/* Minhas OS em Andamento */}
+      {minhasOS.length > 0 && (
+        <>
+          <Text style={s.sectionTitle}>Minhas OS em Andamento</Text>
+          {minhasOS.map((os) => (
+            <TouchableOpacity
+              key={os.id}
+              style={[s.minhaOsCard, { borderLeftColor: OP_COLORS[os.operacao] || '#999' }]}
+              onPress={() => navigateToOperation(os)}
+            >
+              <View style={s.minhaOsRow}>
+                <Text style={s.minhaOsNum}>OS #{os.numero}</Text>
+                <View style={[s.minhaOsBadge, { backgroundColor: OP_COLORS[os.operacao] || '#999' }]}>
+                  <Text style={s.minhaOsBadgeText}>{OP_LABELS[os.operacao] || os.operacao}</Text>
+                </View>
+              </View>
+              {os.notaEntrada && <Text style={s.minhaOsNf}>NF {os.notaEntrada.numero} — {os.notaEntrada.fornecedor || '—'}</Text>}
+              <Text style={s.minhaOsStatus}>{os.status === 'EXECUTANDO' ? '⏱ Executando' : '📂 Aberto'}</Text>
+            </TouchableOpacity>
+          ))}
+        </>
+      )}
 
       {/* Quick Actions */}
       <Text style={s.sectionTitle}>Operações</Text>
@@ -95,4 +155,11 @@ const s = StyleSheet.create({
   opCard: { width: '47%', backgroundColor: '#fff', borderRadius: 10, padding: 16, borderLeftWidth: 4, elevation: 1 },
   opIcon: { fontSize: 28, marginBottom: 8 },
   opLabel: { fontSize: 13, fontWeight: '600', color: '#333' },
+  minhaOsCard: { backgroundColor: '#fff', borderRadius: 10, padding: 14, marginHorizontal: 16, marginBottom: 8, borderLeftWidth: 4, elevation: 1 },
+  minhaOsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  minhaOsNum: { fontSize: 15, fontWeight: '700', color: '#333' },
+  minhaOsBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
+  minhaOsBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  minhaOsNf: { fontSize: 13, color: '#555', marginTop: 2 },
+  minhaOsStatus: { fontSize: 12, color: '#14477E', marginTop: 4 },
 })
