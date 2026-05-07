@@ -34,6 +34,7 @@ export default function SeparacaoScreen() {
   const [itens, setItens] = useState<ItemSeparacao[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [quantidade, setQuantidade] = useState(0)
+  const [scannedCode, setScannedCode] = useState('')
   const [showQtyInput, setShowQtyInput] = useState(false)
   const [showMotivo, setShowMotivo] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -68,7 +69,8 @@ export default function SeparacaoScreen() {
 
   function handleScan(code: string) {
     if (!currentItem) return
-    // Match scanned code against current item product
+    // Store scanned code and show quantity input
+    setScannedCode(code)
     setQuantidade(currentItem.quantidadeSolicitada)
     setShowQtyInput(true)
     setShowMotivo(false)
@@ -79,7 +81,7 @@ export default function SeparacaoScreen() {
     setSubmitting(true)
     try {
       const payload: any = {
-        barcodeEscaneado: currentItem.produto?.codigo || '',
+        barcodeEscaneado: scannedCode || currentItem.produto?.codigo || '',
         quantidadeSeparada: quantidade,
       }
       if (motivo) payload.motivoDivergencia = motivo
