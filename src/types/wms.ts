@@ -5,6 +5,7 @@ export interface AuthUser {
   email: string
   perfil: string
   empresaId: string
+  primeiroLogin?: boolean
 }
 
 export interface LoginResponse {

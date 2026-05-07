@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl, FlatList } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl, FlatList, Alert } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useAuth } from '../context/AuthContext'
@@ -49,6 +49,20 @@ export default function HomeScreen() {
   }
 
   useEffect(() => { fetchPendentes(); fetchMinhasOS() }, [])
+
+  // Primeiro login — sugerir alteração de senha
+  useEffect(() => {
+    if (usuario?.primeiroLogin) {
+      Alert.alert(
+        'Primeiro Acesso',
+        'Recomendamos que você altere sua senha padrão.',
+        [
+          { text: 'Depois', style: 'cancel' },
+          { text: 'Alterar Agora', onPress: () => nav.navigate('Settings') },
+        ]
+      )
+    }
+  }, [usuario?.primeiroLogin])
 
   async function onRefresh() {
     setRefreshing(true)
