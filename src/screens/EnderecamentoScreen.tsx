@@ -36,16 +36,25 @@ export default function EnderecamentoScreen() {
   const [submitting, setSubmitting] = useState(false)
   const [lastResult, setLastResult] = useState<ConfirmarEnderecamentoResponse | null>(null)
 
-  // Buscar total de itens da nota ao montar
-  React.useEffect(() => {
-    async function fetchTotalItens() {
+  // Buscar progresso real do endereçamento (itens já endereçados no servidor)
+  const fetchProgresso = React.useCallback(async () => {
+    try {
+      const { data } = await apiClient.get(`/enderecamento-wms/progresso/${params.notaEntradaId}`)
+      setTotalItensNota(data.totalItens || 0)
+      setTotalEnderecados(data.itensEnderecados || 0)
+    } catch {
+      // Fallback: buscar total de itens da nota
       try {
         const { data } = await apiClient.get(`/conferencia-entrada/${params.notaEntradaId}`)
         setTotalItensNota(data.itens?.length || 0)
       } catch { /* ignore */ }
     }
-    fetchTotalItens()
   }, [params.notaEntradaId])
+
+  React.useEffect(() => { fetchProgresso() }, [fetchProgresso])
+
+  // Todos os itens foram endereçados?
+  const todosEndereçados = totalItensNota > 0 && totalEnderecados >= totalItensNota
 
   async function handleScanLocation(code: string) {
     setLoading(true)
@@ -105,8 +114,9 @@ export default function EnderecamentoScreen() {
         { produtoId: produto.id, enderecoId: endereco.id, quantidade, notaEntradaId: params.notaEntradaId },
       )
       setLastResult(data)
-      setTotalEnderecados((prev) => prev + 1)
       showFeedback('success')
+      // Atualizar progresso real do servidor
+      await fetchProgresso()
       // Reset for next item
       setProduto(null)
       setStep('product')
@@ -184,7 +194,7 @@ export default function EnderecamentoScreen() {
               <Text style={s.infoLabel}>Endereço selecionado:</Text>
               <Text style={s.infoValue}>{endereco?.enderecoCompleto}</Text>
             </View>
-            {totalEnderecados > 0 && (
+            {todosEndereçados && (
               <TouchableOpacity style={s.btnConcluir} disabled={submitting} onPress={async () => {
                 setSubmitting(true)
                 try {
@@ -205,7 +215,12 @@ export default function EnderecamentoScreen() {
                 <Text style={s.btnConcluirText}>{submitting ? 'Finalizando...' : '✅ Concluir Endereçamento'}</Text>
               </TouchableOpacity>
             )}
-            <Text style={s.instruction}>Ou escanear mais produtos neste endereço:</Text>
+            {!todosEndereçados && totalEnderecados > 0 && (
+              <View style={s.pendingCard}>
+                <Text style={s.pendingText}>⚠️ Faltam {totalItensNota - totalEnderecados} item(ns) para concluir</Text>
+              </View>
+            )}
+            <Text style={s.instruction}>Escanear mais produtos neste endereço:</Text>
             <BarcodeScanner onScan={handleScanProduct} placeholder="Escanear produto..." />
           </View>
         )}
@@ -267,4 +282,6 @@ const s = StyleSheet.create({
   resetText: { color: '#14477E', fontSize: 14, fontWeight: '600' },
   btnConcluir: { backgroundColor: '#28C76F', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
   btnConcluirText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  pendingCard: { backgroundColor: '#FFF3E0', borderRadius: 8, padding: 12, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#FF9F43' },
+  pendingText: { fontSize: 13, color: '#E65100', fontWeight: '600' },
 })

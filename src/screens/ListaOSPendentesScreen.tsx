@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, StyleSheet, Alert } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { apiClient } from '../services/apiClient'
 import { useFeedback } from '../context/FeedbackContext'
@@ -45,6 +45,14 @@ export default function ListaOSPendentesScreen() {
   }, [])
 
   useEffect(() => { fetchOS(); fetchMinhasOS() }, [fetchOS, fetchMinhasOS])
+
+  // Auto-refresh quando a tela ganha foco (ex: voltando de conferência ou endereçamento)
+  useFocusEffect(
+    useCallback(() => {
+      fetchOS()
+      fetchMinhasOS()
+    }, [fetchOS, fetchMinhasOS])
+  )
 
   async function onRefresh() { setRefreshing(true); await Promise.all([fetchOS(), fetchMinhasOS()]); setRefreshing(false) }
 
