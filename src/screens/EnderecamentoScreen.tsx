@@ -32,8 +32,20 @@ export default function EnderecamentoScreen() {
   const [produto, setProduto] = useState<ValidarProdutoResponse['produtoEsperado'] | null>(null)
   const [quantidade, setQuantidade] = useState(1)
   const [totalEnderecados, setTotalEnderecados] = useState(0)
+  const [totalItensNota, setTotalItensNota] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [lastResult, setLastResult] = useState<ConfirmarEnderecamentoResponse | null>(null)
+
+  // Buscar total de itens da nota ao montar
+  React.useEffect(() => {
+    async function fetchTotalItens() {
+      try {
+        const { data } = await apiClient.get(`/conferencia-entrada/${params.notaEntradaId}`)
+        setTotalItensNota(data.itens?.length || 0)
+      } catch { /* ignore */ }
+    }
+    fetchTotalItens()
+  }, [params.notaEntradaId])
 
   async function handleScanLocation(code: string) {
     setLoading(true)
@@ -122,7 +134,7 @@ export default function EnderecamentoScreen() {
         onBack={() => nav.goBack()}
       />
       <ScrollView style={s.content} keyboardShouldPersistTaps="handled">
-        <ProgressBar current={totalEnderecados} total={totalEnderecados || 1} label="Itens endereçados" />
+        <ProgressBar current={totalEnderecados} total={totalItensNota || totalEnderecados || 1} label="Itens endereçados" />
 
         {/* Step indicators */}
         <View style={s.steps}>
