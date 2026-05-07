@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native'
 import { useAuth } from '../context/AuthContext'
 import { useFeedback } from '../context/FeedbackContext'
 import LoadingOverlay from '../components/LoadingOverlay'
@@ -31,7 +31,7 @@ export default function LoginScreen() {
       <LoadingOverlay visible={carregando} message="Entrando..." />
       <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
         <View style={s.header}>
-          <Text style={s.logo}>📦</Text>
+          <Image source={require('../../assets/logo.jpeg')} style={s.logoImg} resizeMode="contain" />
           <Text style={s.title}>VisioFab WMS</Text>
           <Text style={s.subtitle}>Coletor / App</Text>
         </View>
@@ -53,7 +53,7 @@ export default function LoginScreen() {
 const s = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, backgroundColor: '#F4F5FA' },
   header: { alignItems: 'center', marginBottom: 32 },
-  logo: { fontSize: 48 },
+  logoImg: { width: 120, height: 120, borderRadius: 20, marginBottom: 8 },
   title: { fontSize: 28, fontWeight: '700', color: '#14477E', marginTop: 8 },
   subtitle: { fontSize: 14, color: '#666' },
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 24, elevation: 2 },
