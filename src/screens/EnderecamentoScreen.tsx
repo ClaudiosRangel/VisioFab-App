@@ -173,13 +173,27 @@ export default function EnderecamentoScreen() {
               <Text style={s.infoValue}>{endereco?.enderecoCompleto}</Text>
             </View>
             {totalEnderecados > 0 && (
-              <TouchableOpacity style={s.btnConcluir} onPress={() => {
-                Alert.alert('Endereçamento Concluído', `${totalEnderecados} item(ns) endereçado(s) com sucesso.`, [{ text: 'OK', onPress: () => nav.goBack() }])
+              <TouchableOpacity style={s.btnConcluir} disabled={submitting} onPress={async () => {
+                setSubmitting(true)
+                try {
+                  await apiClient.post('/enderecamento-wms/finalizar-coletor', {
+                    notaEntradaId: params.notaEntradaId,
+                    osId: params.osId,
+                  })
+                  showFeedback('success')
+                  Alert.alert('Endereçamento Concluído', `${totalEnderecados} item(ns) endereçado(s).\nOS finalizada e nota atualizada.`, [{ text: 'OK', onPress: () => nav.goBack() }])
+                } catch (e: any) {
+                  const msg = e?.response?.data?.message || 'Erro ao finalizar'
+                  Alert.alert('Erro', msg)
+                  showFeedback('error')
+                } finally {
+                  setSubmitting(false)
+                }
               }}>
-                <Text style={s.btnConcluirText}>✅ Concluir Endereçamento</Text>
+                <Text style={s.btnConcluirText}>{submitting ? 'Finalizando...' : '✅ Concluir Endereçamento'}</Text>
               </TouchableOpacity>
             )}
-            <Text style={s.instruction}>Escanear código de barras do produto</Text>
+            <Text style={s.instruction}>Ou escanear mais produtos neste endereço:</Text>
             <BarcodeScanner onScan={handleScanProduct} placeholder="Escanear produto..." />
           </View>
         )}
