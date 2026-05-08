@@ -13,11 +13,11 @@ type Nav = NativeStackNavigationProp<MainStackParamList>
 
 const OP_LABELS: Record<string, string> = {
   CONFERENCIA: 'Conferência', ENDERECAMENTO: 'Endereçamento', SEPARACAO: 'Separação',
-  EMBALAGEM: 'Embalagem', CARREGAMENTO: 'Carregamento',
+  CONFERENCIA_SAIDA: 'Conf. Saída', EMBALAGEM: 'Embalagem', CARREGAMENTO: 'Carregamento',
 }
 const OP_COLORS: Record<string, string> = {
   CONFERENCIA: '#14477E', ENDERECAMENTO: '#28C76F', SEPARACAO: '#FF9F43',
-  EMBALAGEM: '#7367F0', CARREGAMENTO: '#00CFE8',
+  CONFERENCIA_SAIDA: '#7367F0', EMBALAGEM: '#7367F0', CARREGAMENTO: '#00CFE8',
 }
 
 export default function ListaOSPendentesScreen() {
@@ -81,6 +81,9 @@ export default function ListaOSPendentesScreen() {
         break
       case 'SEPARACAO':
         if (os.ondaSeparacaoId) nav.navigate('Separacao', { ondaSeparacaoId: os.ondaSeparacaoId, osId: os.id })
+        break
+      case 'CONFERENCIA_SAIDA':
+        if (os.ondaSeparacaoId) nav.navigate('ConferenciaSaida', { conferenciaSaidaId: os.ondaSeparacaoId, osId: os.id })
         break
       case 'EMBALAGEM':
         if (os.ondaSeparacaoId) nav.navigate('Embalagem', { volumeId: '', ondaSeparacaoId: os.ondaSeparacaoId, osId: os.id })

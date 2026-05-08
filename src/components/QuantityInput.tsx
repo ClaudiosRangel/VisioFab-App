@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 
 interface Props {
@@ -10,8 +10,43 @@ interface Props {
 }
 
 export default function QuantityInput({ value, onChange, label, min = 0, max }: Props) {
+  const [text, setText] = useState(String(value))
+
+  // Sync text when value changes externally (e.g. from +/- buttons or parent)
+  useEffect(() => {
+    setText(String(value))
+  }, [value])
+
+  // Auto-focus and select text on mount
+  const inputRef = React.useRef<TextInput>(null)
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 300)
+  }, [])
+
   const dec = () => onChange(Math.max(min, Math.round((value - 1) * 100) / 100))
   const inc = () => onChange(max !== undefined ? Math.min(max, Math.round((value + 1) * 100) / 100) : Math.round((value + 1) * 100) / 100)
+
+  function handleChangeText(t: string) {
+    // Allow user to type freely (including empty, partial numbers)
+    const cleaned = t.replace(',', '.')
+    setText(cleaned)
+
+    // Only update parent when we have a valid number
+    if (cleaned === '' || cleaned === '.' || cleaned === '-') return
+    const n = parseFloat(cleaned)
+    if (!isNaN(n)) {
+      const clamped = Math.max(min, max !== undefined ? Math.min(max, n) : n)
+      onChange(clamped)
+    }
+  }
+
+  function handleBlur() {
+    // On blur, ensure the text reflects the actual value
+    if (text === '' || text === '.' || isNaN(parseFloat(text))) {
+      setText(String(min))
+      onChange(min)
+    }
+  }
 
   return (
     <View style={s.container}>
@@ -19,16 +54,13 @@ export default function QuantityInput({ value, onChange, label, min = 0, max }: 
       <View style={s.row}>
         <TouchableOpacity style={s.btn} onPress={dec}><Text style={s.btnText}>−</Text></TouchableOpacity>
         <TextInput
+          ref={inputRef}
           style={s.input}
           keyboardType="decimal-pad"
-          value={String(value)}
-          onChangeText={(t) => {
-            // Allow decimal input (comma or dot)
-            const cleaned = t.replace(',', '.')
-            if (cleaned === '' || cleaned === '.') return
-            const n = parseFloat(cleaned)
-            if (!isNaN(n)) onChange(Math.max(min, max !== undefined ? Math.min(max, n) : n))
-          }}
+          value={text}
+          onChangeText={handleChangeText}
+          onBlur={handleBlur}
+          selectTextOnFocus
         />
         <TouchableOpacity style={s.btn} onPress={inc}><Text style={s.btnText}>+</Text></TouchableOpacity>
       </View>
