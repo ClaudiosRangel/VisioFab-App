@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
@@ -29,6 +29,8 @@ export default function ConferenciaEntradaScreen() {
   const [notaInfo, setNotaInfo] = useState<IniciarConferenciaResponse['nota'] | null>(null)
   const [scannedCode, setScannedCode] = useState<string | null>(null)
   const [quantidade, setQuantidade] = useState(1)
+  const [lote, setLote] = useState('')
+  const [validade, setValidade] = useState('')
   const [resultado, setResultado] = useState<ConferirBarrasResponse | null>(null)
   const [conferidos, setConferidos] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -54,6 +56,8 @@ export default function ConferenciaEntradaScreen() {
   function handleScan(code: string) {
     setScannedCode(code)
     setQuantidade(1)
+    setLote('')
+    setValidade('')
     setResultado(null)
   }
 
@@ -61,9 +65,13 @@ export default function ConferenciaEntradaScreen() {
     if (!scannedCode) return
     setSubmitting(true)
     try {
+      const payload: any = { codigoProduto: scannedCode, quantidade }
+      if (lote.trim()) payload.lote = lote.trim()
+      if (validade.trim()) payload.validade = validade.trim()
+
       const { data } = await apiClient.post<ConferirBarrasResponse>(
         `/conferencia-entrada/conferir-por-barras/${params.notaId}`,
-        { codigoProduto: scannedCode, quantidade },
+        payload,
       )
       setResultado(data)
       const newConferidos = conferidos + 1
@@ -145,6 +153,10 @@ export default function ConferenciaEntradaScreen() {
             <Text style={s.scanLabel}>Código escaneado:</Text>
             <Text style={s.scanCode}>{scannedCode}</Text>
             <QuantityInput value={quantidade} onChange={setQuantidade} label="Quantidade" min={1} />
+            <Text style={s.fieldLabel}>Lote (opcional)</Text>
+            <TextInput style={s.fieldInput} placeholder="Ex: L2024-001" value={lote} onChangeText={setLote} />
+            <Text style={s.fieldLabel}>Validade (opcional)</Text>
+            <TextInput style={s.fieldInput} placeholder="Ex: 2025-12-31" value={validade} onChangeText={setValidade} />
             <View style={s.btnRow}>
               <TouchableOpacity style={s.btnCancel} onPress={() => setScannedCode(null)}>
                 <Text style={s.btnCancelText}>Cancelar</Text>
@@ -208,6 +220,8 @@ const s = StyleSheet.create({
   btnCancelText: { color: '#666', fontWeight: '600' },
   btnConfirm: { flex: 1, padding: 12, borderRadius: 8, backgroundColor: '#14477E', alignItems: 'center' },
   btnConfirmText: { color: '#fff', fontWeight: '600' },
+  fieldLabel: { fontSize: 13, color: '#666', marginBottom: 4, marginTop: 8 },
+  fieldInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 15, marginBottom: 4 },
   listSection: { marginTop: 8 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: '#333', marginBottom: 8 },
   itemCard: { backgroundColor: '#fff', borderRadius: 8, padding: 12, marginBottom: 6, elevation: 1 },
